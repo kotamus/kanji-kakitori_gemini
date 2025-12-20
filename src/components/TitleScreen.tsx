@@ -8,7 +8,11 @@ interface TitleScreenProps {
 export const TitleScreen: React.FC<TitleScreenProps> = ({ onSelectGrade }) => {
     const grades = [
         { id: 'grade1', label: '1ねんせい', color: 'bg-pink-400 hover:bg-pink-500' },
-        // Can add more later
+        { id: 'grade2', label: '2ねんせい', color: 'bg-blue-400 hover:bg-blue-500' },
+        { id: 'grade3', label: '3ねんせい', color: 'bg-green-400 hover:bg-green-500' },
+        { id: 'grade4', label: '4ねんせい', color: 'bg-yellow-400 hover:bg-yellow-500' },
+        { id: 'grade5', label: '5ねんせい', color: 'bg-teal-400 hover:bg-teal-500' },
+        { id: 'grade6', label: '6ねんせい', color: 'bg-purple-400 hover:bg-purple-500' },
     ];
 
     return (
@@ -22,7 +26,7 @@ export const TitleScreen: React.FC<TitleScreenProps> = ({ onSelectGrade }) => {
                 </h1>
             </div>
 
-            <div className="grid gap-4 w-full max-w-sm">
+            <div className="grid grid-cols-2 gap-4 w-full max-w-lg">
                 {grades.map((g) => (
                     <button
                         key={g.id}

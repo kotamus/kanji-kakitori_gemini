@@ -1,22 +1,29 @@
-# Tasks
+# タスク
 
-- [x] Project Initialization <!-- id: 0 -->
-    - [x] Initialize Vite project with React and TypeScript <!-- id: 1 -->
-    - [x] Install dependencies (Hanzi Writer, PapaParse, Tailwind CSS) <!-- id: 2 -->
-    - [x] Configure Tailwind CSS v4 <!-- id: 3 -->
-- [x] Core Logic Implementation <!-- id: 4 -->
-    - [x] Implement CSV parser using PapaParse <!-- id: 5 -->
-    - [x] Implement Hanzi Writer component <!-- id: 6 -->
-    - [x] Create data structure for grades and problems <!-- id: 7 -->
-- [x] UI/UX Implementation <!-- id: 8 -->
-    - [x] Create Title Screen (Grade Selection) <!-- id: 9 -->
-    - [x] Create Battle/Quiz Screen <!-- id: 10 -->
-        - [x] Display problem text with highlighted target <!-- id: 11 -->
-        - [x] Implement writing area <!-- id: 12 -->
-        - [x] Feedback system (Correct/Incorrect) <!-- id: 13 -->
-    - [x] Create Result Screen <!-- id: 14 -->
-- [x] Data Preparation <!-- id: 15 -->
-    - [x] Create sample CSV data for Grade 1 <!-- id: 16 -->
-- [x] Verification and Polish <!-- id: 17 -->
-    - [x] Verify functionality on mobile/tablet view <!-- id: 18 -->
-    - [x] Check performance and responsiveness <!-- id: 19 -->
+- [x] プロジェクト初期化 <!-- id: 0 -->
+    - [x] Viteプロジェクト作成 (React + TypeScript) <!-- id: 1 -->
+    - [x] 依存ライブラリのインストール (Hanzi Writer, PapaParse, Tailwind CSS) <!-- id: 2 -->
+    - [x] Tailwind CSS v4の設定 <!-- id: 3 -->
+- [x] コアロジック実装 <!-- id: 4 -->
+    - [x] PapaParseを使用したCSVパーサー実装 <!-- id: 5 -->
+    - [x] Hanzi Writerコンポーネントの実装 <!-- id: 6 -->
+    - [x] データ構造（学年・問題）の定義 <!-- id: 7 -->
+- [x] UI/UX実装 <!-- id: 8 -->
+    - [x] タイトル画面（学年選択）作成 <!-- id: 9 -->
+    - [x] バトル/クイズ画面作成 <!-- id: 10 -->
+        - [x] 問題文と強調表示の実装 <!-- id: 11 -->
+        - [x] 書き取りエリアの実装 <!-- id: 12 -->
+        - [x] フィードバックシステム（正解・不正解） <!-- id: 13 -->
+    - [x] 結果画面作成 <!-- id: 14 -->
+- [x] データ準備 <!-- id: 15 -->
+    - [x] 1年生用のサンプルCSVデータ作成 <!-- id: 16 -->
+- [x] 検証と仕上げ <!-- id: 17 -->
+    - [x] モバイル/タブレット表示での動作確認 <!-- id: 18 -->
+    - [x] パフォーマンスとレスポンスの確認 <!-- id: 19 -->
+- [x] フィードバック演出の強化 <!-- id: 20 -->
+    - [x] SoundManager実装（Web Audio API） <!-- id: 21 -->
+    - [x] FeedbackOverlayコンポーネント作成（○・×） <!-- id: 22 -->
+    - [x] BattleScreenの更新（演出シーケンス制御） <!-- id: 23 -->
+        - [x] 正解時に「あってるよ！」の演出（○と音） <!-- id: 24 -->
+        - [x] 間違い時に「ちがうよ！」の演出（×と音） <!-- id: 25 -->
+        - [x] 画面遷移前の待機時間追加 <!-- id: 26 -->

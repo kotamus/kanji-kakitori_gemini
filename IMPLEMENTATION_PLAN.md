@@ -1,82 +1,46 @@
-# Implementation Plan - Kanji Kakitori App
+# 実装計画 - 漢字書き取りアプリ
 
-## Goal
-Initialize and build the MVP of the "Kanji Kakitori" application based on the requirements.
-The app is a React-based web application for elementary school students to practice Kanji writing in a quiz format.
+## ゴール
+ユーザーへのフィードバックシステムを強化し、視覚的・聴覚的に豊かな体験を提供する。
+- **正解**: 画面に「⚪︎」を表示し、「ピンポン」音を再生。正解の漢字を数秒表示する。
+- **不正解**: 画面に「×」を表示し、「ブッブー」音を再生。正解の漢字を表示する。
 
-## User Review Required
-> [!IMPORTANT]
-> - Tailwind CSS v4 will be used as requested.
-> - Data will be managed via CSV files in `public/data/` or `src/data/` to allow easy editing.
-> - `hanzi-writer` requires stroke order data. We will fetch this from a CDN or include a subset locally. For MVP, we'll try CDN first (e.g., jsdelivr for hanzi-writer-data).
+## ユーザー要確認事項
+> [!NOTE]
+> - 音声は外部アセットへの依存を避けるため、Web Audio APIを使用して合成音で実装します。
+> - 「不正解」の定義について：
+>   - HanziWriterは「正しい画」を書くことを促すツールであるため、単純なストロークミスで即「×」にするのは厳しすぎる可能性があります。
+>   - **方針**: ストロークミスをした瞬間に「ブッブー」と×（小）を出し、ヒント（筆順）を表示します。
+>   - 完全に「不正解」として答えを表示してしまうと問題が終了してしまうため、基本的には「書き直し」を促します。
+>   - もし「パス」や「諦める」機能が必要であれば追加しますが、まずは「ミス時の即時フィードバック」を強化します。
 
-## Proposed Changes
+## 変更案
 
-### Project Initialization
-- Initialize with `vite-app` (React + TypeScript).
-- Setup `tailwind` (v4 alpha or latest compatible) with `@tailwindcss/vite`.
+### 1. SoundManager (Web Audio API)
+`src/utils/SoundManager.ts` を作成:
+- `playCorrect()`: 高音のチャイム（ピンポン♪）。
+- `playIncorrect()`: 低音のブザー（ブッブー）。
 
-### Dependencies
-- `hanzi-writer`: For kanji writing recognition.
-- `papaparse`: For parsing CSV data.
-- `lucide-react`: For icons (optional but good for UI).
-- `canvas-confetti`: For celebration effects (optional).
+### 2. FeedbackOverlay コンポーネント
+`src/components/FeedbackOverlay.tsx` を作成:
+- Props: `type: 'correct' | 'incorrect'`, `isVisible: boolean`.
+- 視覚効果: 画面中央に大きなSVGの「⚪︎」（赤）または「×」（青/黒）。
+- アニメーション: フェードイン・アウト。
 
-### Directory Structure
-```
-src/
-  components/
-    TitleScreen.tsx
-    BattleScreen.tsx
-    WritingArea.tsx
-    ResultScreen.tsx
-  data/
-    grade1.csv (Sample data)
-  types/
-    index.ts (Problem, Grade defs)
-  utils/
-    csvParser.ts
-  App.tsx
-  main.tsx
-  index.css
-```
+### 3. BattleScreen の更新
+- `SoundManager` を導入。
+- `feedback` ステート（'none', 'correct', 'incorrect'）を追加。
+- **正解時**:
+  - `feedback` を 'correct' に設定。
+  - 音声を再生。
+  - 2〜3秒待機。
+  - 次の問題へ遷移。
+- **間違い時（ストローク）**:
+  - 短い「ブッブー」音。
+  - 画面に一瞬「×」を表示？（または書き取りエリア内でのフィードバック）
+  - 要望に従い、明確に「×」と音を出します。
 
-### Data Format (CSV)
-`question,answer`
-Example: `[にち]ようび,日`
-
-### Component Logic
-#### TitleScreen
-- Simple grade selection buttons.
-
-#### BattleScreen
-- Manages game state (current question index, score).
-- Displays the sentence with the target word hidden or highlighted.
-- Integration with `WritingArea`.
-
-#### WritingArea
-- Wraps `HanziWriter`.
-- Handles `quiz()` mode for inputs.
-- Provides feedback events (correct, mistake).
-
-#### ResultScreen
-- Shows score and "Great Job" message.
-- "Back to Title" button.
-
-## Verification Plan
-
-### Automated Tests
-- `npm run build`: Verify no build errors.
-- `npm run lint`: Verify code quality.
-
-### Manual Verification
-1.  **Start App**: `npm run dev`
-2.  **Grade Selection**: Click "Grade 1" on title screen.
-3.  **Quiz Flow**:
-    -   Verify sentence is shown.
-    -   Verify Writing Area appears.
-    -   Write the correct Kanji.
-    -   Verify "Ping Pong" sound or visual feedback.
-    -   Verify transition to next question.
-    -   Make a mistake and verify hint (stroke) appears.
-4.  **Completion**: Finish all questions and verify Result Screen appears.
+## 検証計画
+1. アプリをプレイする。
+2. 正しく書く -> 「⚪︎」が表示され、音が鳴り、少し待ってから次へ進むことを確認。
+3. 間違える -> 「×」が表示され、音が鳴ることを確認。

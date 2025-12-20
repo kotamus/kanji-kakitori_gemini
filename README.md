@@ -1,73 +1,64 @@
-# React + TypeScript + Vite
+# 漢字書き取りアプリ (Kanji Kakitori)
 
-This template provides a minimal setup to get React working in Vite with HMR and some ESLint rules.
+小学生向けの漢字書き取り練習Webアプリケーションです。「ドリル」ではなく「クイズ」感覚で楽しく学習できるように設計されています。
 
-Currently, two official plugins are available:
+## 特徴
 
-- [@vitejs/plugin-react](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react) uses [Babel](https://babeljs.io/) (or [oxc](https://oxc.rs) when used in [rolldown-vite](https://vite.dev/guide/rolldown)) for Fast Refresh
-- [@vitejs/plugin-react-swc](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react-swc) uses [SWC](https://swc.rs/) for Fast Refresh
+*   **「書き」の判定**: `HanziWriter` を使用し、書き順まで正確に判定します。
+*   **文脈学習**: 単語単体ではなく、短文の中で漢字の使い方を学びます。
+*   **直感的なUI**: 子供でも分かりやすい、シンプルで大きなボタンとテキスト。
+*   **わかりやすいフィードバック**: 正解・不正解を音と視覚効果で明確に伝えます。
 
-## React Compiler
+## 技術スタック
 
-The React Compiler is not enabled on this template because of its impact on dev & build performances. To add it, see [this documentation](https://react.dev/learn/react-compiler/installation).
+*   **Frontend**: React (Vite), TypeScript
+*   **Styling**: Tailwind CSS v4
+*   **Libraries**:
+    *   `hanzi-writer`: 漢字の書き取り判定・描画
+    *   `papaparse`: 問題データ(CSV)の読み込み
+    *   `lucide-react`: アイコン
+    *   `canvas-confetti`: 結果発表のエフェクト
 
-## Expanding the ESLint configuration
+## 始め方
 
-If you are developing a production application, we recommend updating the configuration to enable type-aware lint rules:
+### 1. プロジェクトのセットアップ
 
-```js
-export default defineConfig([
-  globalIgnores(['dist']),
-  {
-    files: ['**/*.{ts,tsx}'],
-    extends: [
-      // Other configs...
-
-      // Remove tseslint.configs.recommended and replace with this
-      tseslint.configs.recommendedTypeChecked,
-      // Alternatively, use this for stricter rules
-      tseslint.configs.strictTypeChecked,
-      // Optionally, add this for stylistic rules
-      tseslint.configs.stylisticTypeChecked,
-
-      // Other configs...
-    ],
-    languageOptions: {
-      parserOptions: {
-        project: ['./tsconfig.node.json', './tsconfig.app.json'],
-        tsconfigRootDir: import.meta.dirname,
-      },
-      // other options...
-    },
-  },
-])
+```bash
+npm install
 ```
 
-You can also install [eslint-plugin-react-x](https://github.com/Rel1cx/eslint-react/tree/main/packages/plugins/eslint-plugin-react-x) and [eslint-plugin-react-dom](https://github.com/Rel1cx/eslint-react/tree/main/packages/plugins/eslint-plugin-react-dom) for React-specific lint rules:
+### 2. 開発サーバーの起動
 
-```js
-// eslint.config.js
-import reactX from 'eslint-plugin-react-x'
-import reactDom from 'eslint-plugin-react-dom'
-
-export default defineConfig([
-  globalIgnores(['dist']),
-  {
-    files: ['**/*.{ts,tsx}'],
-    extends: [
-      // Other configs...
-      // Enable lint rules for React
-      reactX.configs['recommended-typescript'],
-      // Enable lint rules for React DOM
-      reactDom.configs.recommended,
-    ],
-    languageOptions: {
-      parserOptions: {
-        project: ['./tsconfig.node.json', './tsconfig.app.json'],
-        tsconfigRootDir: import.meta.dirname,
-      },
-      // other options...
-    },
-  },
-])
+```bash
+npm run dev
 ```
+
+ブラウザで `http://localhost:5173` にアクセスしてください。
+
+## 遊び方
+
+1.  **学年を選ぶ**: タイトル画面で「1ねんせい」を選んでください。
+2.  **問題を解く**:
+    *   表示された文章の、**強調された部分**の漢字を書きます。
+    *   画面下の枠内に大きく書いてください。
+    *   正解すると「ピンポン！」と鳴り、次の問題に進みます。
+3.  **結果**: 5問正解するとクリアです！
+
+## ドキュメント
+
+詳細な情報は以下のファイルをご確認ください（プロジェクトルートにあります）。
+
+*   [WALKTHROUGH.md](./WALKTHROUGH.md): アプリの使い方と検証手順
+*   [IMPLEMENTATION_PLAN.md](./IMPLEMENTATION_PLAN.md): 実装計画書
+*   [TASK_STATUS.md](./TASK_STATUS.md): タスク状況
+
+## ディレクトリ構成
+
+*   `src/components`: UIコンポーネント
+*   `src/data`: データ定義（CSVなど）
+*   `src/utils`: ユーティリティ関数
+*   `public/data`: 本番用問題データ (CSV)
+
+## ライセンス
+
+MIT License

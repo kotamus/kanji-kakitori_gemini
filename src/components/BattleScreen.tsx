@@ -2,13 +2,21 @@ import React, { useState, useEffect } from 'react';
 import { ArrowLeft } from 'lucide-react';
 import type { Problem } from '../types';
 import { parseCSV } from '../utils/csvParser';
-import { WritingArea } from './WritingArea';
+import { WritingArea, type WritingAreaHandle } from './WritingArea';
 import { ResultScreen } from './ResultScreen';
+
+import { soundManager } from '../utils/SoundManager';
+import { FeedbackOverlay } from './FeedbackOverlay';
 
 interface BattleScreenProps {
     gradeId: string;
     onBack: () => void;
 }
+
+export type BattleResult = {
+    problem: Problem;
+    isCorrect: boolean;
+};
 
 export const BattleScreen: React.FC<BattleScreenProps> = ({ gradeId, onBack }) => {
     const [problems, setProblems] = useState<Problem[]>([]);
@@ -16,6 +24,10 @@ export const BattleScreen: React.FC<BattleScreenProps> = ({ gradeId, onBack }) =
     const [itemsLoaded, setItemsLoaded] = useState(false);
     const [score, setScore] = useState(0);
     const [showResult, setShowResult] = useState(false);
+    const [feedback, setFeedback] = useState<'correct' | 'incorrect' | 'none'>('none');
+    const [results, setResults] = useState<BattleResult[]>([]);
+
+    const writingAreaRef = React.useRef<WritingAreaHandle>(null);
 
     useEffect(() => {
         // Load data
@@ -23,35 +35,46 @@ export const BattleScreen: React.FC<BattleScreenProps> = ({ gradeId, onBack }) =
             .then(res => res.text())
             .then(text => {
                 const parsed = parseCSV(text);
-                // Shuffle problems? For now just take first 5
                 setProblems(parsed.slice(0, 5));
                 setItemsLoaded(true);
             })
             .catch(err => console.error("Failed to load data", err));
     }, [gradeId]);
 
-    const handleCorrect = () => {
-        // Ping pong sound (placeholder)
-        // const audio = new Audio('/sounds/correct.mp3'); audio.play();
-        console.log("Ping Pong!");
-
-        setScore(prev => prev + 1);
-        setTimeout(() => {
-            handleNext();
-        }, 1000); // Wait 1 sec before next
-    };
-
-    const handleMistake = () => {
-        // Vibration or visual cue
-        console.log("Mistake!");
-    };
-
-    const handleNext = () => {
+    const handleNext = React.useCallback(() => {
         if (currentIndex < problems.length - 1) {
             setCurrentIndex(prev => prev + 1);
         } else {
             setShowResult(true);
         }
+    }, [currentIndex, problems.length]);
+
+    const handleCorrect = React.useCallback(() => {
+        soundManager.playCorrect();
+        setFeedback('correct');
+        setScore(prev => prev + 1);
+
+        setResults(prev => [...prev, { problem: problems[currentIndex], isCorrect: true }]);
+
+        // Wait 2 seconds before next
+        setTimeout(() => {
+            setFeedback('none');
+            handleNext();
+        }, 2000);
+    }, [handleNext, currentIndex, problems]);
+
+    const handleMistake = React.useCallback(() => {
+        soundManager.playIncorrect();
+        // Option: Show X briefly
+        setFeedback('incorrect');
+        // Clear feedback after 1s so they can try again
+        setTimeout(() => {
+            setFeedback('none');
+        }, 1000);
+    }, []);
+
+    const handleShowHint = () => {
+        writingAreaRef.current?.showHint();
     };
 
     if (!itemsLoaded) return <div className="p-10 text-center">Loading...</div>;
@@ -61,9 +84,11 @@ export const BattleScreen: React.FC<BattleScreenProps> = ({ gradeId, onBack }) =
             <ResultScreen
                 score={score}
                 total={problems.length}
+                results={results}
                 onRetry={() => {
                     setScore(0);
                     setCurrentIndex(0);
+                    setResults([]);
                     setShowResult(false);
                     // Maybe reshuffle here
                 }}
@@ -99,13 +124,25 @@ export const BattleScreen: React.FC<BattleScreenProps> = ({ gradeId, onBack }) =
             </div>
 
             {/* Writing Area */}
-            <div className="flex-1 flex justify-center items-center w-full">
-                <WritingArea
-                    key={currentProblem.id} // Re-mount on problem change
-                    kanji={currentProblem.kanji}
-                    onCorrect={handleCorrect}
-                    onMistake={handleMistake}
-                />
+            <div className="flex-1 flex flex-col justify-center items-center w-full">
+                <div className="relative">
+                    <WritingArea
+                        ref={writingAreaRef}
+                        key={currentProblem.id} // Re-mount on problem change
+                        kanji={currentProblem.kanji}
+                        onCorrect={handleCorrect}
+                        onMistake={handleMistake}
+                    />
+                    <FeedbackOverlay isVisible={feedback !== 'none'} isCorrect={feedback === 'correct'} />
+                </div>
+
+                {/* Hint Button */}
+                <button
+                    onClick={handleShowHint}
+                    className="mt-6 px-6 py-2 bg-yellow-100 text-yellow-700 font-bold rounded-full hover:bg-yellow-200 transition-colors flex items-center gap-2"
+                >
+                    <span className="text-xl">💡</span> ヒント
+                </button>
             </div>
 
             <div className="h-10" />

@@ -2,14 +2,17 @@ import React from 'react';
 import { Trophy, ArrowLeft, RotateCw } from 'lucide-react';
 import confetti from 'canvas-confetti';
 
+import type { BattleResult } from './BattleScreen';
+
 interface ResultScreenProps {
     score: number;
     total: number;
+    results: BattleResult[];
     onRetry: () => void;
     onHome: () => void;
 }
 
-export const ResultScreen: React.FC<ResultScreenProps> = ({ score, total, onRetry, onHome }) => {
+export const ResultScreen: React.FC<ResultScreenProps> = ({ score, total, results, onRetry, onHome }) => {
     React.useEffect(() => {
         if (score === total) {
             confetti({
@@ -33,6 +36,25 @@ export const ResultScreen: React.FC<ResultScreenProps> = ({ score, total, onRetr
             <p className="text-6xl font-black text-orange-500 mb-8">
                 {score} <span className="text-2xl text-gray-400">/ {total}</span>
             </p>
+
+            {/* Results Grid */}
+            <div className="grid grid-cols-5 gap-4 mb-10 w-full max-w-2xl">
+                {results.map((r, i) => (
+                    <div key={i} className="flex flex-col items-center">
+                        <div className={`w-16 h-16 flex items-center justify-center text-3xl font-bold rounded-lg border-2 ${r.isCorrect ? 'bg-white border-orange-200 text-gray-800' : 'bg-gray-100 border-gray-300 text-gray-400'
+                            }`}>
+                            {r.problem.kanji}
+                        </div>
+                        <div className="mt-1">
+                            {r.isCorrect ? (
+                                <span className="text-red-500 font-bold">⚪︎</span>
+                            ) : (
+                                <span className="text-blue-500 font-bold">×</span>
+                            )}
+                        </div>
+                    </div>
+                ))}
+            </div>
 
             <div className="flex gap-4">
                 <button
