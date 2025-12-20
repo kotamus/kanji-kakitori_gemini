@@ -1,11 +1,12 @@
 import React from 'react';
-import { BookOpen } from 'lucide-react';
+import { BookOpen, Settings } from 'lucide-react';
 
 interface TitleScreenProps {
     onSelectGrade: (grade: string) => void;
+    onSettings: () => void;
 }
 
-export const TitleScreen: React.FC<TitleScreenProps> = ({ onSelectGrade }) => {
+export const TitleScreen: React.FC<TitleScreenProps> = ({ onSelectGrade, onSettings }) => {
     const grades = [
         { id: 'grade1', label: '1ねんせい', color: 'bg-pink-400 hover:bg-pink-500' },
         { id: 'grade2', label: '2ねんせい', color: 'bg-blue-400 hover:bg-blue-500' },
@@ -16,7 +17,15 @@ export const TitleScreen: React.FC<TitleScreenProps> = ({ onSelectGrade }) => {
     ];
 
     return (
-        <div className="flex flex-col items-center justify-center min-h-screen p-4 bg-orange-50">
+        <div className="flex flex-col items-center justify-center min-h-screen p-4 bg-orange-50 relative">
+            <button
+                onClick={onSettings}
+                className="absolute top-4 right-4 p-3 bg-white rounded-full shadow-md text-gray-500 hover:text-gray-700 hover:bg-gray-100 transition-all"
+                aria-label="Settings"
+            >
+                <Settings size={24} />
+            </button>
+
             <div className="mb-12 text-center">
                 <div className="inline-block p-4 mb-4 bg-white rounded-full shadow-lg">
                     <BookOpen className="w-16 h-16 text-orange-500" />

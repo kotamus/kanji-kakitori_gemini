@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { ArrowLeft } from 'lucide-react';
+import { ArrowLeft, FastForward } from 'lucide-react';
 import type { Problem } from '../types';
 import { parseCSV } from '../utils/csvParser';
 import { WritingArea, type WritingAreaHandle } from './WritingArea';
@@ -7,6 +7,7 @@ import { ResultScreen } from './ResultScreen';
 
 import { soundManager } from '../utils/SoundManager';
 import { FeedbackOverlay } from './FeedbackOverlay';
+import { useSettings } from '../hooks/useSettings';
 
 interface BattleScreenProps {
     gradeId: string;
@@ -19,6 +20,7 @@ export type BattleResult = {
 };
 
 export const BattleScreen: React.FC<BattleScreenProps> = ({ gradeId, onBack }) => {
+    const { problemCount, skipEnabled } = useSettings();
     const [problems, setProblems] = useState<Problem[]>([]);
     const [currentIndex, setCurrentIndex] = useState(0);
     const [itemsLoaded, setItemsLoaded] = useState(false);
@@ -35,11 +37,11 @@ export const BattleScreen: React.FC<BattleScreenProps> = ({ gradeId, onBack }) =
             .then(res => res.text())
             .then(text => {
                 const parsed = parseCSV(text);
-                setProblems(parsed.slice(0, 5));
+                setProblems(parsed.slice(0, problemCount));
                 setItemsLoaded(true);
             })
             .catch(err => console.error("Failed to load data", err));
-    }, [gradeId]);
+    }, [gradeId, problemCount]);
 
     const handleNext = React.useCallback(() => {
         if (currentIndex < problems.length - 1) {
@@ -73,6 +75,12 @@ export const BattleScreen: React.FC<BattleScreenProps> = ({ gradeId, onBack }) =
         }, 1000);
     }, []);
 
+    const handleSkip = React.useCallback(() => {
+        // Mark as skipped (record as incorrect for now in results tracker, or add 'skipped' status later)
+        setResults(prev => [...prev, { problem: problems[currentIndex], isCorrect: false }]);
+        handleNext();
+    }, [handleNext, currentIndex, problems]);
+
     const handleShowHint = () => {
         writingAreaRef.current?.showHint();
     };
@@ -90,7 +98,6 @@ export const BattleScreen: React.FC<BattleScreenProps> = ({ gradeId, onBack }) =
                     setCurrentIndex(0);
                     setResults([]);
                     setShowResult(false);
-                    // Maybe reshuffle here
                 }}
                 onHome={onBack}
             />
@@ -136,13 +143,23 @@ export const BattleScreen: React.FC<BattleScreenProps> = ({ gradeId, onBack }) =
                     <FeedbackOverlay isVisible={feedback !== 'none'} isCorrect={feedback === 'correct'} />
                 </div>
 
-                {/* Hint Button */}
-                <button
-                    onClick={handleShowHint}
-                    className="mt-6 px-6 py-2 bg-yellow-100 text-yellow-700 font-bold rounded-full hover:bg-yellow-200 transition-colors flex items-center gap-2"
-                >
-                    <span className="text-xl">💡</span> ヒント
-                </button>
+                {/* Buttons */}
+                <div className="mt-6 flex gap-4">
+                    {skipEnabled && (
+                        <button
+                            onClick={handleSkip}
+                            className="px-6 py-2 bg-gray-100 text-gray-600 font-bold rounded-full hover:bg-gray-200 transition-colors flex items-center gap-2"
+                        >
+                            <FastForward size={20} /> スキップ
+                        </button>
+                    )}
+                    <button
+                        onClick={handleShowHint}
+                        className="px-6 py-2 bg-yellow-100 text-yellow-700 font-bold rounded-full hover:bg-yellow-200 transition-colors flex items-center gap-2"
+                    >
+                        <span className="text-xl">💡</span> ヒント
+                    </button>
+                </div>
             </div>
 
             <div className="h-10" />
