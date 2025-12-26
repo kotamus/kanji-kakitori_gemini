@@ -13,6 +13,9 @@ import { useSettings } from '../hooks/useSettings';
 interface BattleScreenProps {
     gradeId: string;
     shuffle: boolean;
+    skipSolvedMode: boolean;
+    solvedKanji: Set<string>;
+    onSolved: (problemId: string) => void;
     onBack: () => void;
 }
 
@@ -33,7 +36,7 @@ export type BattleResult = {
 
 import { motion } from 'framer-motion';
 
-export const BattleScreen: React.FC<BattleScreenProps> = ({ gradeId, shuffle, onBack }) => {
+export const BattleScreen: React.FC<BattleScreenProps> = ({ gradeId, shuffle, skipSolvedMode, solvedKanji, onSolved, onBack }) => {
     // ... (existing hooks)
     const { problemCount } = useSettings();
     const [problems, setProblems] = useState<Problem[]>([]);
@@ -76,6 +79,12 @@ export const BattleScreen: React.FC<BattleScreenProps> = ({ gradeId, shuffle, on
             })
             .then(text => {
                 let parsed = parseCSV(text);
+
+                // Filter out solved problems if mode is enabled
+                if (skipSolvedMode) {
+                    parsed = parsed.filter(p => !solvedKanji.has(p.id));
+                }
+
                 if (shuffle) {
                     parsed = shuffleArray(parsed);
                 }
@@ -86,7 +95,7 @@ export const BattleScreen: React.FC<BattleScreenProps> = ({ gradeId, shuffle, on
                 console.error("Failed to load data", err);
                 setLoadError('問題データの読み込みに失敗しました。');
             });
-    }, [gradeId, problemCount, shuffle]);
+    }, [gradeId, problemCount, shuffle, skipSolvedMode, solvedKanji]);
 
     const handleNext = useCallback(() => {
         if (currentIndex < problems.length - 1) {
@@ -114,6 +123,7 @@ export const BattleScreen: React.FC<BattleScreenProps> = ({ gradeId, shuffle, on
                 setFeedback('correct');
                 setScore(prev => prev + 1);
                 setResults(prev => [...prev, { problem: problems[currentIndex], isCorrect: true }]);
+                onSolved(problems[currentIndex].id); // Mark as solved
 
                 setTimeout(() => {
                     setFeedback('none');

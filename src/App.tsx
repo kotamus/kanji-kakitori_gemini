@@ -11,11 +11,18 @@ function App() {
   const [screen, setScreen] = useState<Screen>('title');
   const [currentGrade, setCurrentGrade] = useState<string | null>(null);
   const [shuffleMode, setShuffleMode] = useState(false);
+  const [skipSolvedMode, setSkipSolvedMode] = useState(false);
+  const [solvedKanji, setSolvedKanji] = useState<Set<string>>(new Set());
 
-  const handleStart = (gradeId: string, shuffle: boolean) => {
+  const handleStart = (gradeId: string, shuffle: boolean, skipSolved: boolean) => {
     setCurrentGrade(gradeId);
     setShuffleMode(shuffle);
+    setSkipSolvedMode(skipSolved);
     setScreen('battle');
+  };
+
+  const handleSolved = (problemId: string) => {
+    setSolvedKanji(prev => new Set(prev).add(problemId));
   };
 
   const handleBackToTitle = () => {
@@ -31,6 +38,9 @@ function App() {
           key="battle"
           gradeId={currentGrade}
           shuffle={shuffleMode}
+          skipSolvedMode={skipSolvedMode}
+          solvedKanji={solvedKanji}
+          onSolved={handleSolved}
           onBack={handleBackToTitle}
         />
       ) : screen === 'settings' ? (

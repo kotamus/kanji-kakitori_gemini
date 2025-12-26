@@ -1,15 +1,16 @@
 import React, { useState } from 'react';
-import { Settings, Shuffle } from 'lucide-react';
+import { Settings, Shuffle, Check } from 'lucide-react';
 import mascotImg from '../assets/mascot.png';
 import sakuraBg from '../assets/sakura_bg.png';
 
 interface TitleScreenProps {
-    onSelectGrade: (grade: string, shuffle: boolean) => void;
+    onSelectGrade: (grade: string, shuffle: boolean, skipSolved: boolean) => void;
     onSettings: () => void;
 }
 
 export const TitleScreen: React.FC<TitleScreenProps> = ({ onSelectGrade, onSettings }) => {
     const [shuffleEnabled, setShuffleEnabled] = useState(false);
+    const [skipSolvedEnabled, setSkipSolvedEnabled] = useState(false);
 
     const grades = [
         { id: 'grade1', label: '1ねんせい', color: 'bg-pink-400 hover:bg-pink-500', shadow: 'shadow-pink-600', text: 'text-white', numColor: 'text-pink-500' },
@@ -66,21 +67,38 @@ export const TitleScreen: React.FC<TitleScreenProps> = ({ onSelectGrade, onSetti
                     </h1>
                 </div>
 
-                {/* Shuffle Toggle */}
-                <button
-                    onClick={() => setShuffleEnabled(!shuffleEnabled)}
-                    className={`
-                        mb-8 px-6 py-3 rounded-full font-bold text-xl flex items-center gap-3 
-                        transition-all duration-300 transform hover:scale-105 active:scale-95 shadow-lg border-4
-                        ${shuffleEnabled
-                            ? 'bg-yellow-400 border-yellow-500 text-yellow-900 rotate-1'
-                            : 'bg-white border-gray-200 text-gray-500 -rotate-1'
-                        }
-                    `}
-                >
-                    <Shuffle size={28} className={shuffleEnabled ? 'animate-spin-slow' : ''} />
-                    <span>シャッフル {shuffleEnabled ? 'ON!' : 'OFF'}</span>
-                </button>
+                {/* Options Toggles */}
+                <div className="flex gap-4 mb-8">
+                    <button
+                        onClick={() => setShuffleEnabled(!shuffleEnabled)}
+                        className={`
+                            px-6 py-3 rounded-full font-bold text-xl flex items-center gap-3 
+                            transition-all duration-300 transform hover:scale-105 active:scale-95 shadow-lg border-4
+                            ${shuffleEnabled
+                                ? 'bg-yellow-400 border-yellow-500 text-yellow-900 rotate-1'
+                                : 'bg-white border-gray-200 text-gray-500 -rotate-1'
+                            }
+                        `}
+                    >
+                        <Shuffle size={28} className={shuffleEnabled ? 'animate-spin-slow' : ''} />
+                        <span>シャッフル {shuffleEnabled ? 'ON!' : 'OFF'}</span>
+                    </button>
+
+                    <button
+                        onClick={() => setSkipSolvedEnabled(!skipSolvedEnabled)}
+                        className={`
+                            px-6 py-3 rounded-full font-bold text-xl flex items-center gap-3 
+                            transition-all duration-300 transform hover:scale-105 active:scale-95 shadow-lg border-4
+                            ${skipSolvedEnabled
+                                ? 'bg-green-400 border-green-500 text-green-900 rotate-1'
+                                : 'bg-white border-gray-200 text-gray-500 -rotate-1'
+                            }
+                        `}
+                    >
+                        <Check size={28} />
+                        <span>正解スキップ {skipSolvedEnabled ? 'ON!' : 'OFF'}</span>
+                    </button>
+                </div>
 
                 {/* Grades Grid */}
                 <div className="grid grid-cols-2 md:grid-cols-3 gap-4 md:gap-5 w-full max-w-2xl px-2">
@@ -89,7 +107,7 @@ export const TitleScreen: React.FC<TitleScreenProps> = ({ onSelectGrade, onSetti
                         return (
                             <button
                                 key={g.id}
-                                onClick={() => onSelectGrade(g.id, shuffleEnabled)}
+                                onClick={() => onSelectGrade(g.id, shuffleEnabled, skipSolvedEnabled)}
                                 className={`
                                     relative group overflow-hidden
                                     flex flex-col items-center justify-center
