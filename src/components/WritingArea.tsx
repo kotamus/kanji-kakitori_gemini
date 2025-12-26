@@ -99,7 +99,8 @@ export const WritingArea = React.forwardRef<WritingAreaHandle, WritingAreaProps>
 
             // Touch events
             const handleTouchStart = (e: TouchEvent) => {
-                e.preventDefault();
+                // Prevent scrolling/zooming immediately
+                if (e.cancelable) e.preventDefault();
                 const touch = e.touches[0];
                 const rect = canvas.getBoundingClientRect();
                 const pos = getPosition(touch, rect);
@@ -142,7 +143,7 @@ export const WritingArea = React.forwardRef<WritingAreaHandle, WritingAreaProps>
                     width={280}
                     height={280}
                     className="cursor-crosshair rounded-2xl"
-                    style={{ touchAction: 'none' }}
+                    style={{ touchAction: 'none', userSelect: 'none', WebkitUserSelect: 'none' }}
                 />
             </div>
         );

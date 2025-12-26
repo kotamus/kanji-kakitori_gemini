@@ -19,18 +19,18 @@ export const TitleScreen: React.FC<TitleScreenProps> = ({ onSelectGrade, onSetti
     ];
 
     return (
-        <div className="flex flex-col items-center justify-center min-h-screen p-4 bg-orange-50 relative">
+        <div className="flex flex-col items-center justify-center min-h-[100dvh] p-4 bg-orange-50 relative">
             <button
                 onClick={onSettings}
-                className="absolute top-4 right-4 p-3 bg-white rounded-full shadow-md text-gray-500 hover:text-gray-700 hover:bg-gray-100 transition-all"
-                aria-label="Settings"
+                className="absolute top-4 right-4 p-4 bg-white rounded-full shadow-md text-gray-500 hover:text-gray-700 hover:bg-gray-100 transition-all active:scale-95"
+                aria-label="設定画面へ"
             >
-                <Settings size={24} />
+                <Settings size={28} />
             </button>
 
-            <div className="mb-8 text-center">
-                <div className="inline-block p-4 mb-4 bg-white rounded-full shadow-lg">
-                    <BookOpen className="w-16 h-16 text-orange-500" />
+            <div className="mb-8 text-center mt-8">
+                <div className="inline-block p-5 mb-4 bg-white rounded-full shadow-lg">
+                    <BookOpen className="w-20 h-20 text-orange-500" />
                 </div>
                 <h1 className="text-4xl font-bold text-gray-800 md:text-6xl tracking-wider">
                     かんじ<br />かきとり
@@ -40,28 +40,30 @@ export const TitleScreen: React.FC<TitleScreenProps> = ({ onSelectGrade, onSetti
             {/* シャッフルボタン */}
             <button
                 onClick={() => setShuffleEnabled(!shuffleEnabled)}
-                className={`mb-6 px-6 py-3 rounded-full font-bold flex items-center gap-2 transition-all shadow-md ${shuffleEnabled
-                        ? 'bg-orange-500 text-white'
-                        : 'bg-white text-gray-600 hover:bg-gray-100'
+                aria-pressed={shuffleEnabled}
+                className={`mb-8 px-8 py-4 rounded-full font-bold flex items-center gap-3 transition-all shadow-md text-lg active:scale-95 ${shuffleEnabled
+                    ? 'bg-orange-500 text-white'
+                    : 'bg-white text-gray-600 hover:bg-gray-100'
                     }`}
             >
-                <Shuffle size={20} />
+                <Shuffle size={24} />
                 シャッフル {shuffleEnabled ? 'ON' : 'OFF'}
             </button>
 
-            <div className="grid grid-cols-2 gap-4 w-full max-w-lg">
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 w-full max-w-lg mb-8">
                 {grades.map((g) => (
                     <button
                         key={g.id}
                         onClick={() => onSelectGrade(g.id, shuffleEnabled)}
-                        className={`p-6 text-2xl font-bold text-white transition-transform transform rounded-2xl shadow-md active:scale-95 ${g.color}`}
+                        className={`p-6 text-2xl font-bold text-white transition-transform transform rounded-2xl shadow-md active:scale-95 active:brightness-110 ${g.color}`}
+                        style={{ minHeight: '80px' }}
                     >
                         {g.label}
                     </button>
                 ))}
             </div>
 
-            <p className="mt-8 text-gray-400 text-sm">
+            <p className="mt-auto mb-4 text-gray-400 text-sm">
                 がくねんを えらんでね！
             </p>
         </div>

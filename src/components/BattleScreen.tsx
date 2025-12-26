@@ -168,35 +168,35 @@ export const BattleScreen: React.FC<BattleScreenProps> = ({ gradeId, shuffle, on
     const currentProblem = problems[currentIndex];
 
     return (
-        <div className="flex flex-col items-center min-h-screen bg-orange-50 p-4">
+        <div className="flex flex-col items-center min-h-[100dvh] bg-orange-50 p-4 touch-none">
             {/* Header */}
-            <div className="w-full max-w-lg flex justify-between items-center mb-8">
-                <button onClick={onBack} className="p-2 bg-white rounded-full shadow hover:bg-gray-100">
-                    <ArrowLeft className="text-gray-600" />
+            <div className="w-full max-w-lg flex justify-between items-center mb-4 mt-2">
+                <button onClick={onBack} className="p-3 bg-white rounded-full shadow hover:bg-gray-100 active:scale-95" aria-label="タイトルへ戻る">
+                    <ArrowLeft className="text-gray-600" size={24} />
                 </button>
                 <div className="text-xl font-bold text-orange-600">
                     もんだい {currentIndex + 1} / {problems.length}
                 </div>
-                <div className="w-10" /> {/* Spacer */}
+                <div className="w-12" /> {/* Spacer */}
             </div>
 
             {/* Problem Text - Answer is hidden! Only show reading hint */}
-            <div className="mb-10 text-center">
-                <p className="text-3xl md:text-5xl font-bold text-gray-800 leading-relaxed">
+            <div className="mb-6 text-center flex-shrink-0">
+                <p className="text-3xl md:text-5xl font-bold text-gray-800 leading-relaxed break-keep">
                     {currentProblem.pre}
                     <span className="inline-block px-2 text-orange-500 border-b-4 border-orange-500 mx-1">
                         {currentProblem.reading}
                     </span>
                     {currentProblem.post}
                 </p>
-                <p className="mt-4 text-lg text-gray-500">
+                <p className="mt-2 text-lg text-gray-500">
                     よみがなを見て、漢字を書いてね！
                 </p>
             </div>
 
             {/* Writing Area */}
-            <div className="flex-1 flex flex-col justify-center items-center w-full">
-                <div className="relative">
+            <div className="flex-1 flex flex-col justify-center items-center w-full max-w-md">
+                <div className="relative mb-6">
                     <WritingArea
                         ref={writingAreaRef}
                         key={currentProblem.id}
@@ -211,32 +211,38 @@ export const BattleScreen: React.FC<BattleScreenProps> = ({ gradeId, shuffle, on
                 </div>
 
                 {/* Buttons */}
-                <div className="mt-6 flex gap-4 flex-wrap justify-center">
+                <div className="w-full grid grid-cols-3 gap-3">
                     <button
                         onClick={handleClearButton}
-                        className="px-5 py-3 bg-red-100 text-red-600 font-bold rounded-full hover:bg-red-200 transition-colors flex items-center gap-2"
+                        className="py-4 bg-red-100 text-red-600 font-bold rounded-2xl hover:bg-red-200 active:scale-95 transition-all flex flex-col items-center justify-center gap-1 shadow-sm"
                         disabled={isProcessing}
+                        aria-label="けす"
                     >
-                        <Eraser size={20} /> けす
+                        <Eraser size={24} />
+                        <span>けす</span>
                     </button>
                     <button
                         onClick={handlePredictButton}
-                        className="px-5 py-3 bg-green-500 text-white font-bold rounded-full hover:bg-green-600 transition-colors flex items-center gap-2"
+                        className="py-4 bg-green-500 text-white font-bold rounded-2xl hover:bg-green-600 active:scale-95 transition-all flex flex-col items-center justify-center gap-1 shadow-md"
                         disabled={isProcessing}
+                        aria-label="はんてい"
                     >
-                        <Check size={20} /> はんてい
+                        <Check size={28} />
+                        <span>はんてい</span>
                     </button>
                     <button
                         onClick={handleSkip}
-                        className="px-5 py-3 bg-gray-200 text-gray-600 font-bold rounded-full hover:bg-gray-300 transition-colors flex items-center gap-2"
+                        className="py-4 bg-gray-200 text-gray-600 font-bold rounded-2xl hover:bg-gray-300 active:scale-95 transition-all flex flex-col items-center justify-center gap-1 shadow-sm"
                         disabled={isProcessing}
+                        aria-label="スキップ"
                     >
-                        <SkipForward size={20} /> スキップ
+                        <SkipForward size={24} />
+                        <span>スキップ</span>
                     </button>
                 </div>
             </div>
 
-            <div className="h-10" />
+            <div className="h-4" />
         </div>
     );
 };
