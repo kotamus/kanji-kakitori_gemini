@@ -1,4 +1,5 @@
 import React from 'react';
+import { motion } from 'framer-motion';
 import { ArrowLeft, FastForward } from 'lucide-react';
 import { useSettings } from '../hooks/useSettings';
 
@@ -10,7 +11,12 @@ export const SettingsScreen: React.FC<SettingsScreenProps> = ({ onBack }) => {
     const { skipEnabled, updateSkip, problemCount, updateCount } = useSettings();
 
     return (
-        <div className="flex flex-col items-center min-h-screen bg-gray-50 p-4">
+        <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            exit={{ opacity: 0, y: 20 }}
+            className="flex flex-col items-center min-h-screen bg-gray-50 p-4"
+        >
             <div className="w-full max-w-lg flex justify-between items-center mb-8">
                 <button onClick={onBack} className="p-2 bg-white rounded-full shadow hover:bg-gray-100">
                     <ArrowLeft className="text-gray-600" />
@@ -67,6 +73,6 @@ export const SettingsScreen: React.FC<SettingsScreenProps> = ({ onBack }) => {
                     />
                 </div>
             </div>
-        </div>
+        </motion.div>
     );
 };

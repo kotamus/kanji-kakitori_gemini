@@ -31,7 +31,10 @@ export type BattleResult = {
     isCorrect: boolean;
 };
 
+import { motion } from 'framer-motion';
+
 export const BattleScreen: React.FC<BattleScreenProps> = ({ gradeId, shuffle, onBack }) => {
+    // ... (existing hooks)
     const { problemCount } = useSettings();
     const [problems, setProblems] = useState<Problem[]>([]);
     const [currentIndex, setCurrentIndex] = useState(0);
@@ -45,20 +48,18 @@ export const BattleScreen: React.FC<BattleScreenProps> = ({ gradeId, shuffle, on
 
     const writingAreaRef = useRef<WritingAreaHandle>(null);
 
-    // Initialize recognizer
+    // ... (useEffect for initRecognizer and load problems)
     useEffect(() => {
         initRecognizer()
             .then(() => setModelReady(true))
             .catch(err => console.error('Failed to initialize recognizer:', err));
     }, []);
 
-    // Load problems
     useEffect(() => {
         fetch(`/data/${gradeId}.csv`)
             .then(res => res.text())
             .then(text => {
                 let parsed = parseCSV(text);
-                // シャッフルモードの場合はランダムに並べ替え
                 if (shuffle) {
                     parsed = shuffleArray(parsed);
                 }
@@ -71,7 +72,6 @@ export const BattleScreen: React.FC<BattleScreenProps> = ({ gradeId, shuffle, on
     const handleNext = useCallback(() => {
         if (currentIndex < problems.length - 1) {
             setCurrentIndex(prev => prev + 1);
-            // Clear canvas for next problem
             setTimeout(() => {
                 writingAreaRef.current?.clearCanvas();
             }, 100);
@@ -87,12 +87,10 @@ export const BattleScreen: React.FC<BattleScreenProps> = ({ gradeId, shuffle, on
         try {
             const targetKanji = problems[currentIndex].kanji;
             const results = await recognizeKanji(canvas, 5);
-
             console.log('Recognition results:', results);
             console.log('Target:', targetKanji);
 
             if (isMatch(results, targetKanji)) {
-                // Correct!
                 soundManager.playCorrect();
                 setFeedback('correct');
                 setScore(prev => prev + 1);
@@ -103,10 +101,8 @@ export const BattleScreen: React.FC<BattleScreenProps> = ({ gradeId, shuffle, on
                     handleNext();
                 }, 2000);
             } else {
-                // Incorrect
                 soundManager.playIncorrect();
                 setFeedback('incorrect');
-
                 setTimeout(() => {
                     setFeedback('none');
                     setIsProcessing(false);
@@ -119,20 +115,10 @@ export const BattleScreen: React.FC<BattleScreenProps> = ({ gradeId, shuffle, on
         setIsProcessing(false);
     }, [currentIndex, problems, handleNext, isProcessing]);
 
-    const handleClear = useCallback(() => {
-        // Canvas cleared
-    }, []);
-
-    const handleClearButton = () => {
-        writingAreaRef.current?.clearCanvas();
-    };
-
-    const handlePredictButton = () => {
-        writingAreaRef.current?.predict();
-    };
-
+    const handleClear = useCallback(() => { }, []);
+    const handleClearButton = () => writingAreaRef.current?.clearCanvas();
+    const handlePredictButton = () => writingAreaRef.current?.predict();
     const handleSkip = useCallback(() => {
-        // スキップは不正解として記録
         setResults(prev => [...prev, { problem: problems[currentIndex], isCorrect: false }]);
         handleNext();
     }, [currentIndex, problems, handleNext]);
@@ -140,8 +126,15 @@ export const BattleScreen: React.FC<BattleScreenProps> = ({ gradeId, shuffle, on
     if (!itemsLoaded || !modelReady) {
         return (
             <div className="flex flex-col items-center justify-center min-h-screen bg-orange-50 p-4">
-                <div className="text-2xl font-bold text-orange-600 mb-4">
-                    ⏳ {!modelReady ? 'AIモデル読み込み中...' : '問題読み込み中...'}
+                <motion.div
+                    animate={{ rotate: 360 }}
+                    transition={{ duration: 1, repeat: Infinity, ease: "linear" }}
+                    className="text-4xl mb-4"
+                >
+                    ⏳
+                </motion.div>
+                <div className="text-xl font-bold text-orange-600 mb-4">
+                    {!modelReady ? 'AIモデル読み込み中...' : '問題読み込み中...'}
                 </div>
                 <div className="text-gray-500">しばらくお待ちください</div>
             </div>
@@ -168,27 +161,44 @@ export const BattleScreen: React.FC<BattleScreenProps> = ({ gradeId, shuffle, on
     const currentProblem = problems[currentIndex];
 
     return (
-        <div className="flex flex-col items-center min-h-[100dvh] bg-orange-50 p-4 touch-none">
+        <motion.div
+            initial={{ opacity: 0, x: 20 }}
+            animate={{ opacity: 1, x: 0 }}
+            exit={{ opacity: 0, x: -20 }}
+            className="flex flex-col items-center min-h-[100dvh] bg-orange-50 p-4 touch-none"
+        >
             {/* Header */}
             <div className="w-full max-w-lg flex justify-between items-center mb-4 mt-2">
-                <button onClick={onBack} className="p-3 bg-white rounded-full shadow hover:bg-gray-100 active:scale-95" aria-label="タイトルへ戻る">
+                <motion.button
+                    whileTap={{ scale: 0.9 }}
+                    onClick={onBack}
+                    className="p-3 bg-white rounded-full shadow hover:bg-gray-100"
+                    aria-label="タイトルへ戻る"
+                >
                     <ArrowLeft className="text-gray-600" size={24} />
-                </button>
+                </motion.button>
                 <div className="text-xl font-bold text-orange-600">
                     もんだい {currentIndex + 1} / {problems.length}
                 </div>
-                <div className="w-12" /> {/* Spacer */}
+                <div className="w-12" />
             </div>
 
-            {/* Problem Text - Answer is hidden! Only show reading hint */}
+            {/* Problem Text */}
             <div className="mb-6 text-center flex-shrink-0">
-                <p className="text-3xl md:text-5xl font-bold text-gray-800 leading-relaxed break-keep">
-                    {currentProblem.pre}
-                    <span className="inline-block px-2 text-orange-500 border-b-4 border-orange-500 mx-1">
-                        {currentProblem.reading}
-                    </span>
-                    {currentProblem.post}
-                </p>
+                <motion.div
+                    key={currentProblem.id}
+                    initial={{ scale: 0.9, opacity: 0 }}
+                    animate={{ scale: 1, opacity: 1 }}
+                    transition={{ type: "spring", stiffness: 300, damping: 20 }}
+                >
+                    <p className="text-3xl md:text-5xl font-bold text-gray-800 leading-relaxed break-keep">
+                        {currentProblem.pre}
+                        <span className="inline-block px-2 text-orange-500 border-b-4 border-orange-500 mx-1">
+                            {currentProblem.reading}
+                        </span>
+                        {currentProblem.post}
+                    </p>
+                </motion.div>
                 <p className="mt-2 text-lg text-gray-500">
                     よみがなを見て、漢字を書いてね！
                 </p>
@@ -212,37 +222,40 @@ export const BattleScreen: React.FC<BattleScreenProps> = ({ gradeId, shuffle, on
 
                 {/* Buttons */}
                 <div className="w-full grid grid-cols-3 gap-3">
-                    <button
+                    <motion.button
+                        whileTap={{ scale: 0.9 }}
                         onClick={handleClearButton}
-                        className="py-4 bg-red-100 text-red-600 font-bold rounded-2xl hover:bg-red-200 active:scale-95 transition-all flex flex-col items-center justify-center gap-1 shadow-sm"
+                        className="py-4 bg-red-100 text-red-600 font-bold rounded-2xl hover:bg-red-200 transition-colors flex flex-col items-center justify-center gap-1 shadow-sm"
                         disabled={isProcessing}
                         aria-label="けす"
                     >
                         <Eraser size={24} />
                         <span>けす</span>
-                    </button>
-                    <button
+                    </motion.button>
+                    <motion.button
+                        whileTap={{ scale: 0.9 }}
                         onClick={handlePredictButton}
-                        className="py-4 bg-green-500 text-white font-bold rounded-2xl hover:bg-green-600 active:scale-95 transition-all flex flex-col items-center justify-center gap-1 shadow-md"
+                        className="py-4 bg-green-500 text-white font-bold rounded-2xl hover:bg-green-600 transition-colors flex flex-col items-center justify-center gap-1 shadow-md"
                         disabled={isProcessing}
                         aria-label="はんてい"
                     >
                         <Check size={28} />
                         <span>はんてい</span>
-                    </button>
-                    <button
+                    </motion.button>
+                    <motion.button
+                        whileTap={{ scale: 0.9 }}
                         onClick={handleSkip}
-                        className="py-4 bg-gray-200 text-gray-600 font-bold rounded-2xl hover:bg-gray-300 active:scale-95 transition-all flex flex-col items-center justify-center gap-1 shadow-sm"
+                        className="py-4 bg-gray-200 text-gray-600 font-bold rounded-2xl hover:bg-gray-300 transition-colors flex flex-col items-center justify-center gap-1 shadow-sm"
                         disabled={isProcessing}
                         aria-label="スキップ"
                     >
                         <SkipForward size={24} />
                         <span>スキップ</span>
-                    </button>
+                    </motion.button>
                 </div>
             </div>
 
             <div className="h-4" />
-        </div>
+        </motion.div>
     );
 };

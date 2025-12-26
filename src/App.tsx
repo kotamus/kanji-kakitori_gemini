@@ -5,6 +5,8 @@ import { SettingsScreen } from './components/SettingsScreen';
 
 type Screen = 'title' | 'battle' | 'settings';
 
+import { AnimatePresence } from 'framer-motion';
+
 function App() {
   const [screen, setScreen] = useState<Screen>('title');
   const [currentGrade, setCurrentGrade] = useState<string | null>(null);
@@ -22,25 +24,25 @@ function App() {
     setShuffleMode(false);
   };
 
-  if (screen === 'battle' && currentGrade) {
-    return (
-      <BattleScreen
-        gradeId={currentGrade}
-        shuffle={shuffleMode}
-        onBack={handleBackToTitle}
-      />
-    );
-  }
-
-  if (screen === 'settings') {
-    return <SettingsScreen onBack={handleBackToTitle} />;
-  }
-
   return (
-    <TitleScreen
-      onSelectGrade={handleStart}
-      onSettings={() => setScreen('settings')}
-    />
+    <AnimatePresence mode="wait">
+      {screen === 'battle' && currentGrade ? (
+        <BattleScreen
+          key="battle"
+          gradeId={currentGrade}
+          shuffle={shuffleMode}
+          onBack={handleBackToTitle}
+        />
+      ) : screen === 'settings' ? (
+        <SettingsScreen key="settings" onBack={handleBackToTitle} />
+      ) : (
+        <TitleScreen
+          key="title"
+          onSelectGrade={handleStart}
+          onSettings={() => setScreen('settings')}
+        />
+      )}
+    </AnimatePresence>
   );
 }
 

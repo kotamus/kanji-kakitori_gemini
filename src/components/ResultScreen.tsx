@@ -1,4 +1,5 @@
 import React from 'react';
+import { motion } from 'framer-motion';
 import { Trophy, ArrowLeft, RotateCw } from 'lucide-react';
 import confetti from 'canvas-confetti';
 
@@ -29,7 +30,12 @@ export const ResultScreen: React.FC<ResultScreenProps> = ({ score, total, result
     else if (percentage >= 80) message = "すごい！";
 
     return (
-        <div className="flex flex-col items-center justify-center min-h-screen p-4 bg-orange-50 text-center">
+        <motion.div
+            initial={{ opacity: 0, scale: 0.9 }}
+            animate={{ opacity: 1, scale: 1 }}
+            exit={{ opacity: 0, scale: 0.9 }}
+            className="flex flex-col items-center justify-center min-h-screen p-4 bg-orange-50 text-center"
+        >
             <Trophy className={`w-24 h-24 mb-6 ${percentage === 100 ? 'text-yellow-400' : 'text-gray-300'}`} />
 
             <h2 className="text-3xl font-bold text-gray-800 mb-2">{message}</h2>
@@ -72,6 +78,6 @@ export const ResultScreen: React.FC<ResultScreenProps> = ({ score, total, result
                     もういっかい
                 </button>
             </div>
-        </div>
+        </motion.div>
     );
 };
