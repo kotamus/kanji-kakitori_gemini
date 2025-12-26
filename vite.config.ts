@@ -36,4 +36,5 @@ export default defineConfig({
       }
     })
   ],
+  base: '/kanji-kakitori_gemini/',
 })

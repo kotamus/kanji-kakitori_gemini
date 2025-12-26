@@ -33,7 +33,32 @@ npm install
 npm run dev
 ```
 
+
 ブラウザで `http://localhost:5173` にアクセスしてください。
+
+### 3. スマホ・iPadでの遊び方
+
+同じWi-Fiに繋がっていれば、スマホやiPadからも遊ぶことができます。
+
+1.  以下のコマンドでサーバーを起動します（`-- --host` を付けます）。
+    ```bash
+    npm run dev -- --host
+    ```
+
+2.  ターミナルに表示される `Network: http://xxx.xxx.x.x:5173/` というURLを確認します。
+
+
+3.  スマホやiPadのブラウザ（SafariやChrome）で、そのURLを入力してアクセスしてください。
+
+### 4. インターネット公開（GitHub Pages）
+
+外出先など、Wi-Fiの届かない場所から使う場合は、GitHub Pagesで公開することができます。
+すでに設定ファイルを追加済みですので、以下の手順で有効化してください。
+
+1.  変更内容をGitHubにプッシュします。
+2.  GitHubのリポジトリページを開き、「Settings」タブ → 左メニューの「Pages」に進みます。
+3.  **Source** の設定を `Deploy from a branch` から **`GitHub Actions`** に変更します。
+4.  数分待つと、自動的にビルドとデプロイが行われ、公開URLが表示されます。
 
 ## 遊び方
 
