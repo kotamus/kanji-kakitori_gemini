@@ -51,6 +51,10 @@ npm run dev
 *   `src/utils`: ユーティリティ関数（漢字認識など）
 *   `public/data`: 問題データ (CSV形式)
 
+## ドキュメント
+
+*   [DATA_SPEC.md](./DATA_SPEC.md): データ仕様書（問題の追加方法など）
+
 ## ライセンス
 
 MIT License
