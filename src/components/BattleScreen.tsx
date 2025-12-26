@@ -46,18 +46,34 @@ export const BattleScreen: React.FC<BattleScreenProps> = ({ gradeId, shuffle, on
     const [results, setResults] = useState<BattleResult[]>([]);
     const [isProcessing, setIsProcessing] = useState(false);
 
+    const [loadError, setLoadError] = useState<string | null>(null);
+
     const writingAreaRef = useRef<WritingAreaHandle>(null);
 
-    // ... (useEffect for initRecognizer and load problems)
+    // Initializer
     useEffect(() => {
-        initRecognizer()
-            .then(() => setModelReady(true))
-            .catch(err => console.error('Failed to initialize recognizer:', err));
+        let isMounted = true;
+        const init = async () => {
+            try {
+                setLoadError(null);
+                await initRecognizer();
+                if (isMounted) setModelReady(true);
+            } catch (err) {
+                console.error('Failed to initialize recognizer:', err);
+                if (isMounted) setLoadError('AIモデルの読み込みに失敗しました。');
+            }
+        };
+        init();
+        return () => { isMounted = false; };
     }, []);
 
     useEffect(() => {
-        fetch(`/data/${gradeId}.csv`)
-            .then(res => res.text())
+        setItemsLoaded(false);
+        fetch(`data/${gradeId}.csv`) // Use relative path for GitHub Pages compatibility
+            .then(res => {
+                if (!res.ok) throw new Error(`HTTP error! status: ${res.status}`);
+                return res.text();
+            })
             .then(text => {
                 let parsed = parseCSV(text);
                 if (shuffle) {
@@ -66,7 +82,10 @@ export const BattleScreen: React.FC<BattleScreenProps> = ({ gradeId, shuffle, on
                 setProblems(parsed.slice(0, problemCount));
                 setItemsLoaded(true);
             })
-            .catch(err => console.error("Failed to load data", err));
+            .catch(err => {
+                console.error("Failed to load data", err);
+                setLoadError('問題データの読み込みに失敗しました。');
+            });
     }, [gradeId, problemCount, shuffle]);
 
     const handleNext = useCallback(() => {
@@ -123,9 +142,35 @@ export const BattleScreen: React.FC<BattleScreenProps> = ({ gradeId, shuffle, on
         handleNext();
     }, [currentIndex, problems, handleNext]);
 
+    if (loadError) {
+        return (
+            <div className="flex flex-col items-center justify-center min-h-[100dvh] bg-orange-50 p-4">
+                <div className="text-xl font-bold text-red-600 mb-4 text-center">
+                    ⚠️ {loadError}
+                </div>
+                <p className="text-gray-500 mb-6 text-sm text-center">
+                    ネットワーク接続を確認してください。<br />
+                    (GitHub Pagesの場合、初回の読み込みに時間がかかることがあります)
+                </p>
+                <button
+                    onClick={() => window.location.reload()}
+                    className="px-6 py-3 bg-white border-2 border-orange-200 text-orange-600 font-bold rounded-full shadow-md active:scale-95"
+                >
+                    再読み込み
+                </button>
+                <button
+                    onClick={onBack}
+                    className="mt-4 text-gray-400 underline text-sm"
+                >
+                    タイトルに戻る
+                </button>
+            </div>
+        );
+    }
+
     if (!itemsLoaded || !modelReady) {
         return (
-            <div className="flex flex-col items-center justify-center min-h-screen bg-orange-50 p-4">
+            <div className="flex flex-col items-center justify-center min-h-[100dvh] bg-orange-50 p-4">
                 <motion.div
                     animate={{ rotate: 360 }}
                     transition={{ duration: 1, repeat: Infinity, ease: "linear" }}
@@ -136,7 +181,7 @@ export const BattleScreen: React.FC<BattleScreenProps> = ({ gradeId, shuffle, on
                 <div className="text-xl font-bold text-orange-600 mb-4">
                     {!modelReady ? 'AIモデル読み込み中...' : '問題読み込み中...'}
                 </div>
-                <div className="text-gray-500">しばらくお待ちください</div>
+                <div className="text-gray-500 text-sm">しばらくお待ちください</div>
             </div>
         );
     }
