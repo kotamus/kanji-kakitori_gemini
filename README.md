@@ -48,17 +48,28 @@ npm run dev
 2.  ターミナルに表示される `Network: http://xxx.xxx.x.x:5173/` というURLを確認します。
 
 
-3.  スマホやiPadのブラウザ（SafariやChrome）で、そのURLを入力してアクセスしてください。
 
-### 4. インターネット公開（GitHub Pages）
+### 4. インターネット公開（無料で使う方法）
 
-外出先など、Wi-Fiの届かない場所から使う場合は、GitHub Pagesで公開することができます。
-すでに設定ファイルを追加済みですので、以下の手順で有効化してください。
+GitHubの無料プラン（Free）をお使いの場合、リポジトリの設定（公開/非公開）によって使えるサービスが異なります。
 
-1.  変更内容をGitHubにプッシュします。
-2.  GitHubのリポジトリページを開き、「Settings」タブ → 左メニューの「Pages」に進みます。
-3.  **Source** の設定を `Deploy from a branch` から **`GitHub Actions`** に変更します。
-4.  数分待つと、自動的にビルドとデプロイが行われ、公開URLが表示されます。
+#### パターンA: リポジトリを「Public（公開）」にしている場合
+**GitHub Pages** が無料で使えます。これが一番簡単です。
+
+1.  GitHubのリポジトリ設定（Settings > General）で、Visibilityが **Public** になっていることを確認します。
+    *   *注意: Publicにすると、世界中の誰でもコードを見られるようになります。*
+2.  「Settings」タブ → 左メニューの「Pages」に進みます。
+3.  **Source** を `GitHub Actions` に設定します。
+4.  数分待つと自動的にデプロイされ、URLが発行されます。
+
+#### パターンB: リポジトリを「Private（非公開）」のままにしたい場合
+PrivateリポジトリでGitHub Pagesを使うには有料プランが必要です。
+無料のまま公開したい場合は、外部サービスの **Vercel**（バーセル）を使うのがおすすめです。
+
+1.  [Vercel](https://vercel.com/) にアクセスし、GitHubアカウントでログインします。
+2.  「Add New...」→「Project」を選択します。
+3.  このリポジトリ（`kanji-kakitori_gemini`）の横にある「Import」ボタンを押します。
+4.  設定変更は不要です。そのまま「Deploy」を押せば完了です！
 
 ## 遊び方
 
