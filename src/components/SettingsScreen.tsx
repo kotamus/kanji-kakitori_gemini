@@ -1,5 +1,5 @@
 import React from 'react';
-import { ArrowLeft, Check, FastForward } from 'lucide-react';
+import { ArrowLeft, FastForward } from 'lucide-react';
 import { useSettings } from '../hooks/useSettings';
 
 interface SettingsScreenProps {
@@ -49,8 +49,8 @@ export const SettingsScreen: React.FC<SettingsScreenProps> = ({ onBack }) => {
                                 key={count}
                                 onClick={() => updateCount(count)}
                                 className={`w-12 h-12 rounded-full font-bold text-lg flex items-center justify-center transition-all ${problemCount === count
-                                        ? 'bg-orange-500 text-white shadow-md scale-110'
-                                        : 'bg-orange-100 text-orange-600 hover:bg-orange-200'
+                                    ? 'bg-orange-500 text-white shadow-md scale-110'
+                                    : 'bg-orange-100 text-orange-600 hover:bg-orange-200'
                                     }`}
                             >
                                 {count}

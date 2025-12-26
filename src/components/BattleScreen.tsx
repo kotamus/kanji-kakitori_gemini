@@ -1,9 +1,10 @@
-import React, { useState, useEffect } from 'react';
-import { ArrowLeft, FastForward } from 'lucide-react';
+import React, { useState, useEffect, useCallback, useRef } from 'react';
+import { ArrowLeft, Eraser, Check, SkipForward } from 'lucide-react';
 import type { Problem } from '../types';
 import { parseCSV } from '../utils/csvParser';
 import { WritingArea, type WritingAreaHandle } from './WritingArea';
 import { ResultScreen } from './ResultScreen';
+import { initRecognizer, recognizeKanji, isMatch, isRecognizerReady } from '../utils/kanjiRecognizer';
 
 import { soundManager } from '../utils/SoundManager';
 import { FeedbackOverlay } from './FeedbackOverlay';
@@ -20,19 +21,28 @@ export type BattleResult = {
 };
 
 export const BattleScreen: React.FC<BattleScreenProps> = ({ gradeId, onBack }) => {
-    const { problemCount, skipEnabled } = useSettings();
+    const { problemCount } = useSettings();
     const [problems, setProblems] = useState<Problem[]>([]);
     const [currentIndex, setCurrentIndex] = useState(0);
     const [itemsLoaded, setItemsLoaded] = useState(false);
+    const [modelReady, setModelReady] = useState(false);
     const [score, setScore] = useState(0);
     const [showResult, setShowResult] = useState(false);
     const [feedback, setFeedback] = useState<'correct' | 'incorrect' | 'none'>('none');
     const [results, setResults] = useState<BattleResult[]>([]);
+    const [isProcessing, setIsProcessing] = useState(false);
 
-    const writingAreaRef = React.useRef<WritingAreaHandle>(null);
+    const writingAreaRef = useRef<WritingAreaHandle>(null);
 
+    // Initialize recognizer
     useEffect(() => {
-        // Load data
+        initRecognizer()
+            .then(() => setModelReady(true))
+            .catch(err => console.error('Failed to initialize recognizer:', err));
+    }, []);
+
+    // Load problems
+    useEffect(() => {
         fetch(`/data/${gradeId}.csv`)
             .then(res => res.text())
             .then(text => {
@@ -43,49 +53,85 @@ export const BattleScreen: React.FC<BattleScreenProps> = ({ gradeId, onBack }) =
             .catch(err => console.error("Failed to load data", err));
     }, [gradeId, problemCount]);
 
-    const handleNext = React.useCallback(() => {
+    const handleNext = useCallback(() => {
         if (currentIndex < problems.length - 1) {
             setCurrentIndex(prev => prev + 1);
+            // Clear canvas for next problem
+            setTimeout(() => {
+                writingAreaRef.current?.clearCanvas();
+            }, 100);
         } else {
             setShowResult(true);
         }
     }, [currentIndex, problems.length]);
 
-    const handleCorrect = React.useCallback(() => {
-        soundManager.playCorrect();
-        setFeedback('correct');
-        setScore(prev => prev + 1);
+    const handlePredict = useCallback(async (canvas: HTMLCanvasElement) => {
+        if (!isRecognizerReady() || isProcessing) return;
 
-        setResults(prev => [...prev, { problem: problems[currentIndex], isCorrect: true }]);
+        setIsProcessing(true);
+        try {
+            const targetKanji = problems[currentIndex].kanji;
+            const results = await recognizeKanji(canvas, 5);
 
-        // Wait 2 seconds before next
-        setTimeout(() => {
-            setFeedback('none');
-            handleNext();
-        }, 2000);
-    }, [handleNext, currentIndex, problems]);
+            console.log('Recognition results:', results);
+            console.log('Target:', targetKanji);
 
-    const handleMistake = React.useCallback(() => {
-        soundManager.playIncorrect();
-        // Option: Show X briefly
-        setFeedback('incorrect');
-        // Clear feedback after 1s so they can try again
-        setTimeout(() => {
-            setFeedback('none');
-        }, 1000);
+            if (isMatch(results, targetKanji)) {
+                // Correct!
+                soundManager.playCorrect();
+                setFeedback('correct');
+                setScore(prev => prev + 1);
+                setResults(prev => [...prev, { problem: problems[currentIndex], isCorrect: true }]);
+
+                setTimeout(() => {
+                    setFeedback('none');
+                    handleNext();
+                }, 2000);
+            } else {
+                // Incorrect
+                soundManager.playIncorrect();
+                setFeedback('incorrect');
+
+                setTimeout(() => {
+                    setFeedback('none');
+                    setIsProcessing(false);
+                }, 1000);
+                return;
+            }
+        } catch (error) {
+            console.error('Recognition error:', error);
+        }
+        setIsProcessing(false);
+    }, [currentIndex, problems, handleNext, isProcessing]);
+
+    const handleClear = useCallback(() => {
+        // Canvas cleared
     }, []);
 
-    const handleSkip = React.useCallback(() => {
-        // Mark as skipped (record as incorrect for now in results tracker, or add 'skipped' status later)
-        setResults(prev => [...prev, { problem: problems[currentIndex], isCorrect: false }]);
-        handleNext();
-    }, [handleNext, currentIndex, problems]);
-
-    const handleShowHint = () => {
-        writingAreaRef.current?.showHint();
+    const handleClearButton = () => {
+        writingAreaRef.current?.clearCanvas();
     };
 
-    if (!itemsLoaded) return <div className="p-10 text-center">Loading...</div>;
+    const handlePredictButton = () => {
+        writingAreaRef.current?.predict();
+    };
+
+    const handleSkip = useCallback(() => {
+        // スキップは不正解として記録
+        setResults(prev => [...prev, { problem: problems[currentIndex], isCorrect: false }]);
+        handleNext();
+    }, [currentIndex, problems, handleNext]);
+
+    if (!itemsLoaded || !modelReady) {
+        return (
+            <div className="flex flex-col items-center justify-center min-h-screen bg-orange-50 p-4">
+                <div className="text-2xl font-bold text-orange-600 mb-4">
+                    ⏳ {!modelReady ? 'AIモデル読み込み中...' : '問題読み込み中...'}
+                </div>
+                <div className="text-gray-500">しばらくお待ちください</div>
+            </div>
+        );
+    }
 
     if (showResult) {
         return (
@@ -119,7 +165,7 @@ export const BattleScreen: React.FC<BattleScreenProps> = ({ gradeId, onBack }) =
                 <div className="w-10" /> {/* Spacer */}
             </div>
 
-            {/* Problem Text */}
+            {/* Problem Text - Answer is hidden! Only show reading hint */}
             <div className="mb-10 text-center">
                 <p className="text-3xl md:text-5xl font-bold text-gray-800 leading-relaxed">
                     {currentProblem.pre}
@@ -128,6 +174,9 @@ export const BattleScreen: React.FC<BattleScreenProps> = ({ gradeId, onBack }) =
                     </span>
                     {currentProblem.post}
                 </p>
+                <p className="mt-4 text-lg text-gray-500">
+                    よみがなを見て、漢字を書いてね！
+                </p>
             </div>
 
             {/* Writing Area */}
@@ -135,29 +184,39 @@ export const BattleScreen: React.FC<BattleScreenProps> = ({ gradeId, onBack }) =
                 <div className="relative">
                     <WritingArea
                         ref={writingAreaRef}
-                        key={currentProblem.id} // Re-mount on problem change
-                        kanji={currentProblem.kanji}
-                        onCorrect={handleCorrect}
-                        onMistake={handleMistake}
+                        key={currentProblem.id}
+                        onPredict={handlePredict}
+                        onClear={handleClear}
                     />
-                    <FeedbackOverlay isVisible={feedback !== 'none'} isCorrect={feedback === 'correct'} />
+                    <FeedbackOverlay
+                        isVisible={feedback !== 'none'}
+                        isCorrect={feedback === 'correct'}
+                        kanji={currentProblem.kanji}
+                    />
                 </div>
 
                 {/* Buttons */}
-                <div className="mt-6 flex gap-4">
-                    {skipEnabled && (
-                        <button
-                            onClick={handleSkip}
-                            className="px-6 py-2 bg-gray-100 text-gray-600 font-bold rounded-full hover:bg-gray-200 transition-colors flex items-center gap-2"
-                        >
-                            <FastForward size={20} /> スキップ
-                        </button>
-                    )}
+                <div className="mt-6 flex gap-4 flex-wrap justify-center">
                     <button
-                        onClick={handleShowHint}
-                        className="px-6 py-2 bg-yellow-100 text-yellow-700 font-bold rounded-full hover:bg-yellow-200 transition-colors flex items-center gap-2"
+                        onClick={handleClearButton}
+                        className="px-5 py-3 bg-red-100 text-red-600 font-bold rounded-full hover:bg-red-200 transition-colors flex items-center gap-2"
+                        disabled={isProcessing}
                     >
-                        <span className="text-xl">💡</span> ヒント
+                        <Eraser size={20} /> けす
+                    </button>
+                    <button
+                        onClick={handlePredictButton}
+                        className="px-5 py-3 bg-green-500 text-white font-bold rounded-full hover:bg-green-600 transition-colors flex items-center gap-2"
+                        disabled={isProcessing}
+                    >
+                        <Check size={20} /> はんてい
+                    </button>
+                    <button
+                        onClick={handleSkip}
+                        className="px-5 py-3 bg-gray-200 text-gray-600 font-bold rounded-full hover:bg-gray-300 transition-colors flex items-center gap-2"
+                        disabled={isProcessing}
+                    >
+                        <SkipForward size={20} /> スキップ
                     </button>
                 </div>
             </div>

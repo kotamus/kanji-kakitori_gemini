@@ -1,119 +1,152 @@
-import React, { useEffect, useRef } from 'react';
-import HanziWriter from 'hanzi-writer';
+import React, { useEffect, useRef, useCallback } from 'react';
 
 interface WritingAreaProps {
-    kanji: string;
-    onCorrect: () => void;
-    onMistake: () => void;
+    onPredict: (canvas: HTMLCanvasElement) => void;
+    onClear?: () => void;
 }
 
 export interface WritingAreaHandle {
-    showHint: () => void;
+    clearCanvas: () => void;
+    predict: () => void;
 }
 
-export const WritingArea = React.forwardRef<WritingAreaHandle, WritingAreaProps>(({ kanji, onCorrect, onMistake }, ref) => {
-    const divRef = useRef<HTMLDivElement>(null);
-    const writerRef = useRef<HanziWriter | null>(null);
-    const strokeIndexRef = useRef(0);
+export const WritingArea = React.forwardRef<WritingAreaHandle, WritingAreaProps>(
+    ({ onPredict, onClear }, ref) => {
+        const canvasRef = useRef<HTMLCanvasElement>(null);
+        const isDrawingRef = useRef(false);
+        const lastPosRef = useRef({ x: 0, y: 0 });
 
-    React.useImperativeHandle(ref, () => ({
-        showHint: () => {
-            const writer = writerRef.current;
-            if (!writer) return;
+        const clearCanvas = useCallback(() => {
+            const canvas = canvasRef.current;
+            if (!canvas) return;
+            const ctx = canvas.getContext('2d');
+            if (!ctx) return;
 
-            // Cancel current quiz
-            writer.cancelQuiz();
-            // Animate only the current stroke
-            writer.animateStroke(strokeIndexRef.current, {
-                onComplete: () => {
-                    // Resume quiz from current stroke
-                    startQuiz(strokeIndexRef.current);
-                }
-            });
-        }
-    }));
+            ctx.fillStyle = 'white';
+            ctx.fillRect(0, 0, canvas.width, canvas.height);
+            onClear?.();
+        }, [onClear]);
 
-    const startQuiz = (startStrokeNum: number) => {
-        const writer = writerRef.current;
-        if (!writer) return;
+        const predict = useCallback(() => {
+            const canvas = canvasRef.current;
+            if (!canvas) return;
+            onPredict(canvas);
+        }, [onPredict]);
 
-        // options don't seem to have startStrokeNum in standard types, checking typical usage...
-        // Actually, if we just call quiz() again, it might restart.
-        // But we want to skipping strokes.
-        // Let's assume user wants to write the NEXT stroke.
-        // We can use writer.quiz({ quizStartStrokeNum: startStrokeNum }) if supported,
-        // or just let them write.
-        // Wait, hanzi-writer 2.x+ uses `quizStartStrokeNum`.
-        // Let's try casting or using any if types are old.
+        React.useImperativeHandle(ref, () => ({
+            clearCanvas,
+            predict,
+        }));
 
-        writer.quiz({
-            quizStartStrokeNum: startStrokeNum,
-            onCorrectStroke: (data: { strokeNum: number }) => {
-                strokeIndexRef.current = data.strokeNum + 1;
-                // Update internal counter for next recursions
-                // Actually startStrokeNum is static for this call.
-                // We need to keep strokeIndexRef up to date.
-                // onCorrectStroke data contains { strokeNum: number }
-            },
-            onMistake: () => {
-                onMistake();
-                // Show hint
-            },
-            onComplete: () => {
-                writer.showCharacter();
-                onCorrect();
-            },
-        } as any);
+        const getPosition = useCallback((e: MouseEvent | Touch, rect: DOMRect) => {
+            return {
+                x: e.clientX - rect.left,
+                y: e.clientY - rect.top,
+            };
+        }, []);
 
-        // Fix: onCorrectStroke above is tricky because we need the ACTUAL stroke number.
-        // HanziWriter quiz doesn't easily expose "next stroke index" in the callback unless we track it.
-        // Let's refine the quiz call.
-    };
+        const startDrawing = useCallback((x: number, y: number) => {
+            isDrawingRef.current = true;
+            lastPosRef.current = { x, y };
+        }, []);
 
-    useEffect(() => {
-        if (!divRef.current) return;
+        const draw = useCallback((x: number, y: number) => {
+            if (!isDrawingRef.current) return;
+            const canvas = canvasRef.current;
+            if (!canvas) return;
+            const ctx = canvas.getContext('2d');
+            if (!ctx) return;
 
-        // Clear previous writer
-        divRef.current.innerHTML = '';
-        strokeIndexRef.current = 0;
+            ctx.strokeStyle = '#000';
+            ctx.lineWidth = 6;
+            ctx.lineCap = 'round';
+            ctx.lineJoin = 'round';
 
-        const writer = HanziWriter.create(divRef.current, kanji, {
-            width: 280,
-            height: 280,
-            padding: 10,
-            showOutline: false, // Blind mode: don't show the character initially
-            strokeColor: '#333',
-            drawingWidth: 20,
-            showCharacter: false,
-            charDataLoader: (char, onComplete) => {
-                fetch(`https://cdn.jsdelivr.net/gh/chanind/hanzi-writer-data-jp/data/${char}.json`)
-                    .then(res => res.json())
-                    .then(onComplete)
-                    .catch(err => console.error("Failed to load char data", char, err));
-            }
-        });
+            ctx.beginPath();
+            ctx.moveTo(lastPosRef.current.x, lastPosRef.current.y);
+            ctx.lineTo(x, y);
+            ctx.stroke();
 
-        writerRef.current = writer;
+            lastPosRef.current = { x, y };
+        }, []);
 
-        // Initial quiz start
-        writer.quiz({
-            onCorrectStroke: (data) => {
-                strokeIndexRef.current = data.strokeNum + 1;
-            },
-            onMistake: () => {
-                onMistake();
-            },
-            onComplete: () => {
-                writer.showCharacter();
-                onCorrect();
-            },
-        });
+        const stopDrawing = useCallback(() => {
+            isDrawingRef.current = false;
+        }, []);
 
-    }, [kanji, onCorrect, onMistake]);
+        useEffect(() => {
+            const canvas = canvasRef.current;
+            if (!canvas) return;
 
-    return (
-        <div className="bg-white rounded-3xl shadow-xl border-4 border-orange-300 p-2 touch-none">
-            <div ref={divRef} className="w-[280px] h-[280px] cursor-pointer" />
-        </div>
-    );
-});
+            // Initial clear
+            clearCanvas();
+
+            // Mouse events
+            const handleMouseDown = (e: MouseEvent) => {
+                const rect = canvas.getBoundingClientRect();
+                const pos = getPosition(e, rect);
+                startDrawing(pos.x, pos.y);
+            };
+
+            const handleMouseMove = (e: MouseEvent) => {
+                const rect = canvas.getBoundingClientRect();
+                const pos = getPosition(e, rect);
+                draw(pos.x, pos.y);
+            };
+
+            const handleMouseUp = () => stopDrawing();
+            const handleMouseLeave = () => stopDrawing();
+
+            // Touch events
+            const handleTouchStart = (e: TouchEvent) => {
+                e.preventDefault();
+                const touch = e.touches[0];
+                const rect = canvas.getBoundingClientRect();
+                const pos = getPosition(touch, rect);
+                startDrawing(pos.x, pos.y);
+            };
+
+            const handleTouchMove = (e: TouchEvent) => {
+                e.preventDefault();
+                const touch = e.touches[0];
+                const rect = canvas.getBoundingClientRect();
+                const pos = getPosition(touch, rect);
+                draw(pos.x, pos.y);
+            };
+
+            const handleTouchEnd = () => stopDrawing();
+
+            canvas.addEventListener('mousedown', handleMouseDown);
+            canvas.addEventListener('mousemove', handleMouseMove);
+            canvas.addEventListener('mouseup', handleMouseUp);
+            canvas.addEventListener('mouseleave', handleMouseLeave);
+            canvas.addEventListener('touchstart', handleTouchStart, { passive: false });
+            canvas.addEventListener('touchmove', handleTouchMove, { passive: false });
+            canvas.addEventListener('touchend', handleTouchEnd);
+
+            return () => {
+                canvas.removeEventListener('mousedown', handleMouseDown);
+                canvas.removeEventListener('mousemove', handleMouseMove);
+                canvas.removeEventListener('mouseup', handleMouseUp);
+                canvas.removeEventListener('mouseleave', handleMouseLeave);
+                canvas.removeEventListener('touchstart', handleTouchStart);
+                canvas.removeEventListener('touchmove', handleTouchMove);
+                canvas.removeEventListener('touchend', handleTouchEnd);
+            };
+        }, [clearCanvas, getPosition, startDrawing, draw, stopDrawing]);
+
+        return (
+            <div className="bg-white rounded-3xl shadow-xl border-4 border-orange-300 p-2 touch-none">
+                <canvas
+                    ref={canvasRef}
+                    width={280}
+                    height={280}
+                    className="cursor-crosshair rounded-2xl"
+                    style={{ touchAction: 'none' }}
+                />
+            </div>
+        );
+    }
+);
+
+WritingArea.displayName = 'WritingArea';

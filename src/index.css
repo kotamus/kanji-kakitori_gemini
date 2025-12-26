@@ -1,7 +1,7 @@
 @import "tailwindcss";
 
 :root {
-  font-family: "M PLUS Rounded 1c", ui-rounded, "Hiragino Maru Gothic ProN", Quicksand, Segoe UI, Roboto, Helvetica, Arial, sans-serif, "Apple Color Emoji", "Segoe UI Emoji", "Segoe UI Symbol";
+  font-family: "Klee One", "M PLUS Rounded 1c", ui-rounded, "Hiragino Maru Gothic ProN", Quicksand, Segoe UI, Roboto, Helvetica, Arial, sans-serif, "Apple Color Emoji", "Segoe UI Emoji", "Segoe UI Symbol";
 }
 
 body {
