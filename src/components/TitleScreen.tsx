@@ -62,7 +62,7 @@ export const TitleScreen: React.FC<TitleScreenProps> = ({ onSelectGrade, onSetti
                             textShadow: '0 0 0 #fff, 4px 4px 0px #fff, 8px 8px 0px rgba(0,0,0,0.15)',
                             WebkitTextStroke: '3px #fff'
                         }}>
-                        かんじ<br className="hidden" />かきとり
+                        かんじ<br className="md:hidden" />かきとり
                     </h1>
                 </div>
 
