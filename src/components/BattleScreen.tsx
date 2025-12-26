@@ -12,7 +12,18 @@ import { useSettings } from '../hooks/useSettings';
 
 interface BattleScreenProps {
     gradeId: string;
+    shuffle: boolean;
     onBack: () => void;
+}
+
+// Fisher-Yates shuffle
+function shuffleArray<T>(array: T[]): T[] {
+    const result = [...array];
+    for (let i = result.length - 1; i > 0; i--) {
+        const j = Math.floor(Math.random() * (i + 1));
+        [result[i], result[j]] = [result[j], result[i]];
+    }
+    return result;
 }
 
 export type BattleResult = {
@@ -20,7 +31,7 @@ export type BattleResult = {
     isCorrect: boolean;
 };
 
-export const BattleScreen: React.FC<BattleScreenProps> = ({ gradeId, onBack }) => {
+export const BattleScreen: React.FC<BattleScreenProps> = ({ gradeId, shuffle, onBack }) => {
     const { problemCount } = useSettings();
     const [problems, setProblems] = useState<Problem[]>([]);
     const [currentIndex, setCurrentIndex] = useState(0);
@@ -46,12 +57,16 @@ export const BattleScreen: React.FC<BattleScreenProps> = ({ gradeId, onBack }) =
         fetch(`/data/${gradeId}.csv`)
             .then(res => res.text())
             .then(text => {
-                const parsed = parseCSV(text);
+                let parsed = parseCSV(text);
+                // シャッフルモードの場合はランダムに並べ替え
+                if (shuffle) {
+                    parsed = shuffleArray(parsed);
+                }
                 setProblems(parsed.slice(0, problemCount));
                 setItemsLoaded(true);
             })
             .catch(err => console.error("Failed to load data", err));
-    }, [gradeId, problemCount]);
+    }, [gradeId, problemCount, shuffle]);
 
     const handleNext = useCallback(() => {
         if (currentIndex < problems.length - 1) {
